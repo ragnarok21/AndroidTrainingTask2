@@ -7,6 +7,9 @@ import android.os.Looper;
 import android.view.View;
 import android.widget.ListView;
 
+import org.json.JSONObject;
+import org.json.XML;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -52,12 +55,12 @@ public class MainActivity extends Activity {
         MyListViewAdapter adapter = new MyListViewAdapter(this);
 
         listview.setAdapter(adapter);
-        adapter.setData(newsResponse.items);
+        adapter.setData(newsResponse.item);
     }
 
     private NewsResponse fetchNewsReport() {
         try{
-            URL url = new URL("http://rss2json.com/api.json?rss_url=http://www.feedforall.com/sample.xml");
+            URL url = new URL("http://www.feedforall.com/sample.xml");
             URLConnection urlConnection = url.openConnection();
             HttpURLConnection connection = null;
             if (urlConnection instanceof HttpURLConnection) {
@@ -74,11 +77,13 @@ public class MainActivity extends Activity {
             while ((current = in.readLine()) != null) {
                 urlString += current;
             }
-            System.out.println(urlString);
+
+            JSONObject jsonObject = XML.toJSONObject(urlString);
+            String json = jsonObject.getJSONObject("rss").getJSONObject("channel").toString();
+
             //convert string to json using jackson
 
-            return (NewsResponse) Utils.fromJson(urlString,NewsResponse.class);
-
+            return (NewsResponse) Utils.fromJson(json,NewsResponse.class);
 
         }catch(Exception e){
             e.printStackTrace();

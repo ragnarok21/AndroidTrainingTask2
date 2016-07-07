@@ -7,8 +7,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class NewsResponse {
 
-    public String status;
-    public List<News> items;
+    public List<News> item;
 
     public NewsResponse(){}
 }
