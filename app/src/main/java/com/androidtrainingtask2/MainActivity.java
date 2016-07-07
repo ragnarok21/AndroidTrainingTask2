@@ -2,18 +2,16 @@ package com.androidtrainingtask2;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.widget.ListView;
 
-import org.w3c.dom.CharacterData;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.URL;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
+import java.net.URLConnection;
 
 
 public class MainActivity extends Activity {
@@ -26,62 +24,60 @@ public class MainActivity extends Activity {
 
             @Override
             public void onClick(View view) {
-                System.out.println("Hello World");
-                getListData();
+                doInBackground();
             }
         });
     }
 
-    private void getListData() {
+    private void doInBackground() {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                getListDataResponse(fetchNewsReport());
+                backToMainThreadWithResponse(fetchNewsReport());
             }
         });
         thread.start();
     }
 
+    private void backToMainThreadWithResponse(final NewsResponse response){
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                getListDataResponse(response);
+            }
+        });
+    }
     private void getListDataResponse(NewsResponse newsResponse) {
         ListView listview = (ListView)findViewById(R.id.listView);
         MyListViewAdapter adapter = new MyListViewAdapter(this);
 
         listview.setAdapter(adapter);
-        adapter.setData(newsResponse.list);
+        adapter.setData(newsResponse.items);
     }
 
     private NewsResponse fetchNewsReport() {
         try{
-            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-            DocumentBuilder db = dbf.newDocumentBuilder();
-            Document doc = db.parse(new URL("http://www.feedforall.com/sample.xml").openStream());
-           // NodeList nodes = doc.getElementsByTagName("item");
+            URL url = new URL("http://rss2json.com/api.json?rss_url=http://www.feedforall.com/sample.xml");
+            URLConnection urlConnection = url.openConnection();
+            HttpURLConnection connection = null;
+            if (urlConnection instanceof HttpURLConnection) {
+                connection = (HttpURLConnection) urlConnection;
+            } else {
+                System.out.println("Please enter an HTTP URL.");
+                return null;
+            }
+            String urlString = "";
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(connection.getInputStream()));
 
-/*
-            for (int i = 0; i <nodes.getLength() ; i++) {
-                Element element = (Element) nodes.item(i);
-                NodeList title = element.getElementsByTagName("title");
-                Element line = (Element) title.item(0);
-                System.out.println("Title: " + getCharacterDataFromElement(line));
+            String current;
+            while ((current = in.readLine()) != null) {
+                urlString += current;
+            }
+            System.out.println(urlString);
+            //convert string to json using jackson
 
-                NodeList description = element.getElementsByTagName("description");
-                line = (Element) description.item(0);
-                System.out.println("Description: " + getCharacterDataFromElement(line));
-            }*/
-
-            /*StringWriter sw = new StringWriter();
-            TransformerFactory tf = TransformerFactory.newInstance();
-            Transformer transformer = tf.newTransformer();
-            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
-            transformer.setOutputProperty(OutputKeys.METHOD, "xml");
-            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-            transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-
-            transformer.transform(new DOMSource(doc), new StreamResult(sw));
-            JSONObject jsonObj = XML.toJSONObject(xml);
-            String a = sw.toString();*/
-            String a = doc.toString();
-           // JSONObject json
+            return (NewsResponse) Utils.fromJson(urlString,NewsResponse.class);
 
 
         }catch(Exception e){
@@ -90,14 +86,6 @@ public class MainActivity extends Activity {
         return null;
     }
 
-    private String getCharacterDataFromElement(Element e) {
-        Node child = e.getFirstChild();
-        if (child instanceof CharacterData) {
-            CharacterData cd = (CharacterData) child;
-            return cd.getData().toString();
-        }
-        return "";
-    }
 
 
 }

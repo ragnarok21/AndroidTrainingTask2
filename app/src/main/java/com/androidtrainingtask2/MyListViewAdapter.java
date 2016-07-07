@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,17 +41,16 @@ public class MyListViewAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        /*NewsResponse data = mDataList.get(position);
+        News data = mDataList.get(position);
 
         if(convertView == null){
             convertView = mInflater.inflate(R.layout.listitem,null);
             System.out.println("item created for "+position);
         }
 
-        ((TextView)convertView.findViewById(R.id.textView2)).setText(data.dt_txt);
+        ((TextView)convertView.findViewById(R.id.textView2)).setText(data.title);
 
-        return convertView;*/
-        return null;
+        return convertView;
 
     }
 }
